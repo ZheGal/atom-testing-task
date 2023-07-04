@@ -4,9 +4,9 @@ import { defineStore } from 'pinia';
 
 export const useTimerStore = defineStore('timer', () => {
   const remainingTime: Ref<number> = ref(0);
-  const started: Ref<any> = ref(null);
+  const started: Ref<number> = ref(Date.now());
 
-  function set(sec) {
+  function set(sec: number) {
     remainingTime.value = sec * 1000;
   }
 
