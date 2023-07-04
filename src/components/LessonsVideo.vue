@@ -13,14 +13,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onUpdated, ref } from 'vue';
 import type { Ref } from 'vue';
 import { useLessonsStore } from '../stores/lessons.js';
+import { useTimerStore } from '../stores/timer.js';
 
 const store = useLessonsStore();
+const timerStore = useTimerStore();
 const videoPlayer: Ref<HTMLVideoElement | null> = ref(null);
 const videoUrl = computed(() => store.activeLesson && store.activeLesson.video_url);
 const timer = ref();
+
+onUpdated(() => {
+  if (!store.activeLesson) return;
+  const { video_time } = store.activeLesson;
+  timerStore.set(video_time);
+});
 
 const unlockEvent = () => {
   const nextId = store.active + 1;
@@ -31,13 +39,17 @@ const unlockEvent = () => {
 };
 
 const startPlay = () => {
-  const time = store.activeLesson && store.activeLesson.video_time * 1000;
-  const currentTime = (videoPlayer.value && videoPlayer.value.currentTime * 1000) || 0;
-  timer.value = setTimeout(unlockEvent, time - currentTime);
+  if (timerStore.remainingTime > 0) {
+    timerStore.start();
+    timer.value = setTimeout(unlockEvent, timerStore.remainingTime);
+  }
 };
 
 const pauseVideo = () => {
-  clearTimeout(timer.value);
+  if (timerStore.remainingTime > 0) {
+    timerStore.pause();
+    clearTimeout(timer.value);
+  }
 };
 </script>
 
